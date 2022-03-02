@@ -1,0 +1,6 @@
+.gitignore
+
+docs
+src
+rollup.config.js
+svelte.config.js
