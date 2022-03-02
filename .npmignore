@@ -1,6 +1,10 @@
 .gitignore
+LICENSE
+README.md
 
+.github
 docs
 src
 rollup.config.js
 svelte.config.js
+pnpm-lock.yaml
