@@ -6,7 +6,6 @@
   "module": "./dist/index.mjs",
   "scripts": {
     "build": "rollup -c rollup.config.js",
-    "prepare": "npm install && npm run build",
     "test": "test"
   },
   "repository": {
