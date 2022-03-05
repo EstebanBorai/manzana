@@ -11,7 +11,7 @@ describe('Form: initialValues', () => {
       last: 'Borai',
       email: 'esteban@mail.com',
     };
-    const form = newForm({
+    const form = newForm<{ name: string; last: string; email: string }>({
       initialValues,
     });
 
@@ -30,7 +30,7 @@ describe('Form: initialValues', () => {
       last: 'Borai',
       email: 'esteban@mail.com',
     };
-    const form = newForm({
+    const form = newForm<{ name: string; last: string; email: string }>({
       initialValues,
     });
 
@@ -38,16 +38,32 @@ describe('Form: initialValues', () => {
     initialValues.last = 'Appleseed';
     initialValues.email = 'john@mail.com';
 
-    let values: Values = {};
-
-    form.values.subscribe((state) => (values = state));
-
-    expect(values.name).toStrictEqual('Esteban');
-    expect(values.last).toStrictEqual('Borai');
-    expect(values.email).toStrictEqual('esteban@mail.com');
+    expect(form.initialValues.name).toStrictEqual('Esteban');
+    expect(form.initialValues.last).toStrictEqual('Borai');
+    expect(form.initialValues.email).toStrictEqual('esteban@mail.com');
   });
 
   it('Throws a "TypeError" if no "initialValues" are provided to the configuration.', () => {
     expect(() => newForm({} as FormConfig)).toThrowErrorMatchingSnapshot();
+  });
+});
+
+describe('Form: $values', () => {
+  it('`form.$values` from `newForm` is a store with a subscribe function', () => {
+    const form = newForm({ initialValues: {} });
+
+    expect(form.values.subscribe).toBeDefined();
+  });
+
+  it('Holds "initialValues" when subscribing for the first time', () => {
+    const initialValues = { name: 'Lorem', last: 'Ipsum' };
+    const form = newForm<typeof initialValues>({ initialValues });
+
+    let values = {} as typeof initialValues;
+
+    form.values.subscribe((state) => (values = state));
+
+    expect(values.name).toStrictEqual('Lorem');
+    expect(values.last).toStrictEqual('Ipsum');
   });
 });

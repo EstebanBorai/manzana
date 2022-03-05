@@ -1,19 +1,25 @@
-import { derived, writable } from 'svelte/store';
+import { writable } from 'svelte/store';
 
-import type { Readable, Writable } from 'svelte/store';
+import type { Writable } from 'svelte/store';
 
 export type Values = Record<string, string | number | boolean>;
 
-export type FormInstance = {
-  initialValues: Readable<Values>;
-  values: Writable<Values>;
+export type FormInstance<T = Values> = {
+  /**
+   * Form's fields initial values.
+   *
+   * This object is required to initialize a new form, it's used to track
+   * changed values and to initialize the form values.
+   */
+  initialValues: T;
+  values: Writable<T>;
 };
 
-export type FormConfig = {
-  initialValues: Record<string, string | number | boolean>;
+export type FormConfig<T = Values> = {
+  initialValues: T;
 };
 
-export function newForm(config: FormConfig): FormInstance {
+export function newForm<T = Values>(config: FormConfig<T>): FormInstance<T> {
   if (typeof config === 'undefined') {
     throw new TypeError(
       'You must provide a config to "newForm". Expected "config" to be an object, received "undefined" instead.',
@@ -30,12 +36,9 @@ export function newForm(config: FormConfig): FormInstance {
   const values = writable({
     ...initialValues,
   });
-  const state = writable({
-    initialValues,
-  });
 
   return {
-    initialValues: derived(state, ($state) => $state.initialValues),
+    initialValues,
     values,
   };
 }
