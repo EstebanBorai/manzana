@@ -46,6 +46,12 @@ describe('Form: initialValues', () => {
   it('Throws a "TypeError" if no "initialValues" are provided to the configuration.', () => {
     expect(() => newForm({} as FormConfig)).toThrowErrorMatchingSnapshot();
   });
+
+  it('Throws a "TypeError" if no configuration is provided.', () => {
+    const config = undefined as FormConfig;
+
+    expect(() => newForm(config)).toThrowErrorMatchingSnapshot();
+  });
 });
 
 describe('Form: $values', () => {
@@ -65,5 +71,34 @@ describe('Form: $values', () => {
 
     expect(values.name).toStrictEqual('Lorem');
     expect(values.last).toStrictEqual('Ipsum');
+  });
+
+  it('Updates $values when "handleChange" is executed', () => {
+    const initialValues = { name: 'Lorem', last: 'Ipsum' };
+    const form = newForm<typeof initialValues>({ initialValues });
+
+    let values = {} as typeof initialValues;
+
+    form.values.subscribe((state) => (values = state));
+    form.handleChange({
+      target: {
+        name: 'name',
+        value: 'Testing!',
+      },
+    } as unknown as Event);
+
+    expect(values.name).toStrictEqual('Testing!');
+  });
+
+  it('Updates $values when "setFieldValue" is executed', () => {
+    const initialValues = { name: 'Lorem', last: 'Ipsum' };
+    const form = newForm<typeof initialValues>({ initialValues });
+
+    let values = {} as typeof initialValues;
+
+    form.values.subscribe((state) => (values = state));
+    form.setFieldValue('name', 'Testing!');
+
+    expect(values.name).toStrictEqual('Testing!');
   });
 });
