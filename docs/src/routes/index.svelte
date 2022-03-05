@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { newForm } from 'manzana';
 
-	const { initialValues, values } = newForm({
+	const { initialValues, handleChange, values } = newForm({
 		initialValues: {
 			name: 'Esteban',
 			email: 'hello@estebanborai.com'
@@ -21,7 +21,7 @@
 			</div>
 			<div class="form-example">
 				<label for="email">Enter your email: </label>
-				<input type="email" name="email" id="email" required bind:value={$values.email} />
+				<input type="email" name="email" id="email" required value={$values.email} on:change={handleChange} />
 			</div>
 			<div class="form-example">
 				<label for="age">Enter your age: </label>
@@ -37,7 +37,7 @@
 			Initial Values:
 			<br />
 			<pre>
-{JSON.stringify($initialValues, undefined, 2)}
+{JSON.stringify(initialValues, undefined, 2)}
 </pre>
 		</code>
 		<br /><br />

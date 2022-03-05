@@ -19,6 +19,23 @@ export type FormInstance<T = Values> = {
    */
   handleChange(event: Event): void;
   /**
+   * Event handler for the input's `input` event.
+   *
+   * The `handleInput` function comes handy when building `input` components
+   * which must support dynamic `type` values, given that using dynamic type
+   * attribute along with two-way binding is not legal on Svelte.
+   *
+   * ```
+   * Error: 'type' attribute cannot be dynamic if input uses two-way binding.
+   * ```
+   *
+   * Read the [Rich Harris's answer on StackOverflow][1] for more details on
+   * this topic.
+   *
+   * [1]: https://stackoverflow.com/a/57393751/9888500
+   */
+  handleInput(event: Event): void;
+  /**
    * Imperatively sets the value for the field with the name provided.
    *
    * This function will not trigger validation.
@@ -65,6 +82,24 @@ export type FormConfig<T = Values> = {
   initialValues: T;
 };
 
+/**
+ * Retrieves a HTML Input element instance value based on the input's type.
+ *
+ * Given a type, `getInputValue` will retrieve the value as follows:
+ *
+ * - `number` or `range`: Retrieve the `number` equivalent using `+` sign.
+ * - As fallback retrieves the value _as is_.
+ */
+export const getInputValue = (inputElement: HTMLInputElement): any => {
+  const type = inputElement.type;
+
+  if (type.match(/^(number|range)$/)) {
+    return +inputElement.value;
+  }
+
+  return inputElement.value;
+};
+
 export function newForm<T = Values>(config: FormConfig<T>): FormInstance<T> {
   if (typeof config === 'undefined') {
     throw new TypeError(
@@ -100,15 +135,24 @@ export function newForm<T = Values>(config: FormConfig<T>): FormInstance<T> {
   };
 
   const handleChange = (event: Event): void => {
-    const inputElement = event.target as HTMLInputElement;
-    const name = inputElement.name;
-    const value = inputElement.value;
+    const target = event.target as HTMLInputElement;
+    const name = target.name;
+    const value = getInputValue(target);
 
     return setFieldValue(name, value, true);
   };
 
+  const handleInput = (event: Event): void => {
+    const target = event.target as HTMLInputElement;
+    const name = target.name;
+    const value = getInputValue(target);
+
+    return setFieldValue(name, value);
+  };
+
   return {
     handleChange,
+    handleInput,
     initialValues,
     setFieldValue,
     values,

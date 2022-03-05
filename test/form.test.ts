@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { newForm } from '../src';
+import { getInputValue } from '../src/form';
 
 import type { FormConfig, Values } from '../src/form';
 
@@ -84,6 +85,7 @@ describe('Form: $values', () => {
       target: {
         name: 'name',
         value: 'Testing!',
+        type: 'text',
       },
     } as unknown as Event);
 
@@ -100,5 +102,49 @@ describe('Form: $values', () => {
     form.setFieldValue('name', 'Testing!');
 
     expect(values.name).toStrictEqual('Testing!');
+  });
+});
+
+describe('Form Internals: getInputValue', () => {
+  it('Retrieves the input value as a "number" if the type is "number"', () => {
+    const htmlInputElement = {
+      type: 'number',
+      value: '1234',
+    } as HTMLInputElement;
+
+    expect(getInputValue(htmlInputElement)).toStrictEqual(1234);
+  });
+
+  it('Retrieves the input value as a "number" if the type is "range"', () => {
+    const htmlInputElement = {
+      type: 'range',
+      value: '1234',
+    } as HTMLInputElement;
+
+    expect(getInputValue(htmlInputElement)).toStrictEqual(1234);
+  });
+
+  it('Retrieves the input value "as is" as fallback', () => {
+    const instances = [
+      {
+        type: 'text',
+        value: 'testing',
+      },
+      {
+        type: 'whateva',
+        value: { foo: 1, bar: 2 },
+      },
+      {
+        type: 'boo',
+        value: null,
+      },
+    ] as HTMLInputElement[];
+
+    expect.assertions(instances.length);
+    instances.forEach((htmlInputElement, index) => {
+      const value = getInputValue(htmlInputElement);
+
+      expect(value).toStrictEqual(instances[index].value);
+    });
   });
 });
