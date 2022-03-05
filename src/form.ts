@@ -10,7 +10,7 @@ export type FormInstance = {
 }
 
 export type FormConfig = {
-  initialValues?: Record<string, string | number | boolean>;
+  initialValues: Record<string, string | number | boolean>;
 }
 
 export function newForm(config: FormConfig): FormInstance {
@@ -18,7 +18,11 @@ export function newForm(config: FormConfig): FormInstance {
     throw new TypeError('You must provide a config to "newForm". Expected "config" to be an object, received "undefined" instead.');
   }
 
-  const initialValues = config.initialValues ? JSON.parse(JSON.stringify(config.initialValues)) : {};
+  if (!config.initialValues) {
+    throw new TypeError('You must specify "initialValues" with an object to "FormConfig".');
+  }
+
+  const initialValues = JSON.parse(JSON.stringify(config.initialValues));
   const values = writable({
     ...initialValues,
   });

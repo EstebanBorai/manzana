@@ -6,6 +6,7 @@
 !.env.example
 
 build
+coverage
 dist
 package
 node_modules
