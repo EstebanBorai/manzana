@@ -1,0 +1,24 @@
+name: lint
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Linting and Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          cache: npm
+          node-version: 16
+      - name: Install dependencies
+        run: npm install
+      - name: Run linter
+        run: npm run lint

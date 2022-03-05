@@ -10,14 +10,14 @@ describe('Form: initialValues', () => {
       name: 'Esteban',
       last: 'Borai',
       email: 'esteban@mail.com',
-    }
+    };
     const form = newForm({
       initialValues,
     });
 
     let values: Values = {};
 
-    form.values.subscribe((state) => values = state);
+    form.values.subscribe((state) => (values = state));
 
     expect(values.name).toStrictEqual(initialValues.name);
     expect(values.last).toStrictEqual(initialValues.last);
@@ -29,7 +29,7 @@ describe('Form: initialValues', () => {
       name: 'Esteban',
       last: 'Borai',
       email: 'esteban@mail.com',
-    }
+    };
     const form = newForm({
       initialValues,
     });
@@ -40,7 +40,7 @@ describe('Form: initialValues', () => {
 
     let values: Values = {};
 
-    form.values.subscribe((state) => values = state);
+    form.values.subscribe((state) => (values = state));
 
     expect(values.name).toStrictEqual('Esteban');
     expect(values.last).toStrictEqual('Borai');
