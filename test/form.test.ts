@@ -1,9 +1,11 @@
+import { get } from 'svelte/store';
+import * as Yup from 'yup';
 import { describe, expect, it } from 'vitest';
 
 import { newForm } from '../src';
 import { getInputValue } from '../src/form';
 
-import type { FormConfig, Values } from '../src/form';
+import type { FormConfig } from '../src/form';
 
 describe('Form: initialValues', () => {
   it('Creates a new form with initial values', () => {
@@ -15,10 +17,7 @@ describe('Form: initialValues', () => {
     const form = newForm<{ name: string; last: string; email: string }>({
       initialValues,
     });
-
-    let values: Values = {};
-
-    form.values.subscribe((state) => (values = state));
+    const values = get(form.values);
 
     expect(values.name).toStrictEqual(initialValues.name);
     expect(values.last).toStrictEqual(initialValues.last);
@@ -65,10 +64,7 @@ describe('Form: $values', () => {
   it('Holds "initialValues" when subscribing for the first time', () => {
     const initialValues = { name: 'Lorem', last: 'Ipsum' };
     const form = newForm<typeof initialValues>({ initialValues });
-
-    let values = {} as typeof initialValues;
-
-    form.values.subscribe((state) => (values = state));
+    const values = get(form.values);
 
     expect(values.name).toStrictEqual('Lorem');
     expect(values.last).toStrictEqual('Ipsum');
@@ -78,9 +74,6 @@ describe('Form: $values', () => {
     const initialValues = { name: 'Lorem', last: 'Ipsum' };
     const form = newForm<typeof initialValues>({ initialValues });
 
-    let values = {} as typeof initialValues;
-
-    form.values.subscribe((state) => (values = state));
     form.handleChange({
       target: {
         name: 'name',
@@ -88,6 +81,7 @@ describe('Form: $values', () => {
         type: 'text',
       },
     } as unknown as Event);
+    const values = get(form.values);
 
     expect(values.name).toStrictEqual('Testing!');
   });
@@ -96,12 +90,50 @@ describe('Form: $values', () => {
     const initialValues = { name: 'Lorem', last: 'Ipsum' };
     const form = newForm<typeof initialValues>({ initialValues });
 
-    let values = {} as typeof initialValues;
-
-    form.values.subscribe((state) => (values = state));
     form.setFieldValue('name', 'Testing!');
+    const values = get(form.values);
 
     expect(values.name).toStrictEqual('Testing!');
+  });
+});
+
+describe('Form: validateField', () => {
+  it('Validates a single field', async () => {
+    const form = newForm({
+      initialValues: {
+        name: '',
+      },
+      validationSchema: Yup.object({
+        name: Yup.string().required('You must provide the name.'),
+      }),
+    });
+
+    await form.validateField('name');
+    const errors = get(form.errors);
+
+    expect(errors.name).toStrictEqual('You must provide the name.');
+  });
+
+  it('Resets error state when form value is updated', async () => {
+    expect.assertions(2);
+
+    const form = newForm({
+      initialValues: {
+        name: '',
+      },
+      validationSchema: Yup.object({
+        name: Yup.string().required('You must provide the name.'),
+      }),
+    });
+
+    await form.validateField('name');
+    const errors = get(form.errors);
+    expect(errors.name).toStrictEqual('You must provide the name.');
+
+    form.setFieldValue('name', 'Testing!');
+    await form.validateField('name');
+    const errors2 = get(form.errors);
+    expect(errors2.name).toBeUndefined();
   });
 });
 

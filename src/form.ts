@@ -1,12 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { writable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 
 import type { Writable } from 'svelte/store';
+import type { SchemaLike } from 'yup/lib/types';
 
 export type Values = Record<string, any>;
 
 export type FormInstance<T = Values> = {
+  /**
+   * Form errors.
+   *
+   * A writable store that holds form validation errors.
+   */
+  errors: Writable<Partial<T>>;
   /**
    * Form's fields initial values.
    *
@@ -41,6 +48,16 @@ export type FormInstance<T = Values> = {
    * This function will not trigger validation.
    */
   setFieldValue(name: string, value: any): void;
+  /**
+   * Validates a single field using the provided `validationSchema`
+   * asynchronously.
+   */
+  validateField(field: string): Promise<void>;
+  /**
+   * Validates a single field using the provided `validationSchema`
+   * synchronously.
+   */
+  validateFieldSync(field: string): void;
   /**
    * Current form values.
    *
@@ -79,7 +96,27 @@ export type FormInstance<T = Values> = {
 };
 
 export type FormConfig<T = Values> = {
+  /**
+   * Form's fields initial values.
+   *
+   * This object is required to initialize a new form, it's used to track
+   * changed values and to initialize the form values.
+   */
   initialValues: T;
+  /**
+   * Wether to validate form fields whenever `handleChange` is executed.
+   */
+  validateOnChange?: boolean;
+  /**
+   * Wether to validate form fields whenever `handleInput` is executed.
+   */
+  validateOnInput?: boolean;
+  /**
+   * A [Yup][1] schema used to validate form values.
+   *
+   * [1]: https://github.com/jquense/yup
+   */
+  validationSchema?: SchemaLike;
 };
 
 /**
@@ -114,9 +151,48 @@ export function newForm<T = Values>(config: FormConfig<T>): FormInstance<T> {
   }
 
   const initialValues = JSON.parse(JSON.stringify(config.initialValues));
+  const errors = writable({});
   const values = writable({
     ...initialValues,
   });
+
+  const validateField = async (field: string): Promise<void> => {
+    try {
+      const currentFormValues = get(values);
+
+      await config.validationSchema.validateAt(field, currentFormValues);
+      errors.update((currentState) => ({
+        ...currentState,
+        [field]: undefined,
+      }));
+    } catch (error) {
+      if ('path' in error && Array.isArray(error?.errors)) {
+        errors.update((currentState) => ({
+          ...currentState,
+          [error.path]: error.errors[0],
+        }));
+      }
+    }
+  };
+
+  const validateFieldSync = (field: string): void => {
+    try {
+      const currentFormValues = get(values);
+
+      config.validationSchema.validateSyncAt(field, currentFormValues);
+      errors.update((currentState) => ({
+        ...currentState,
+        [field]: undefined,
+      }));
+    } catch (error) {
+      if ('path' in error && Array.isArray(error?.errors)) {
+        errors.update((currentState) => ({
+          ...currentState,
+          [error.path]: error.errors[0],
+        }));
+      }
+    }
+  };
 
   const setFieldValue = (
     name: string,
@@ -128,9 +204,8 @@ export function newForm<T = Values>(config: FormConfig<T>): FormInstance<T> {
       [name]: value,
     }));
 
-    if (shouldValidateField) {
-      // TODO: Validate field if `shouldValidate` is `true`
-      console.warn('setFieldValue.shouldValidateField is not yet implemented!');
+    if (shouldValidateField && config.validationSchema) {
+      validateFieldSync(name);
     }
   };
 
@@ -139,7 +214,7 @@ export function newForm<T = Values>(config: FormConfig<T>): FormInstance<T> {
     const name = target.name;
     const value = getInputValue(target);
 
-    return setFieldValue(name, value, true);
+    return setFieldValue(name, value, config.validateOnChange);
   };
 
   const handleInput = (event: Event): void => {
@@ -147,14 +222,17 @@ export function newForm<T = Values>(config: FormConfig<T>): FormInstance<T> {
     const name = target.name;
     const value = getInputValue(target);
 
-    return setFieldValue(name, value);
+    return setFieldValue(name, value, config.validateOnInput);
   };
 
   return {
+    errors,
     handleChange,
     handleInput,
     initialValues,
     setFieldValue,
     values,
+    validateField,
+    validateFieldSync,
   };
 }
