@@ -4,6 +4,7 @@ import { get, writable } from 'svelte/store';
 
 import type { Writable } from 'svelte/store';
 import type { SchemaLike } from 'yup/lib/types';
+import { ValidationError } from 'yup';
 
 export type Values = Record<string, any>;
 
@@ -43,11 +44,13 @@ export type FormInstance<T = Values> = {
    */
   handleInput(event: Event): void;
   /**
-   * Imperatively sets the value for the field with the name provided.
-   *
-   * This function will not trigger validation.
+   * Imperatively sets the error message for the field with the name provided.
    */
-  setFieldValue(name: string, value: any): void;
+  setFieldError(name: string, message: string | null): void;
+  /**
+   * Imperatively sets the value for the field with the name provided.
+   */
+  setFieldValue(name: string, value: any, shouldValidateField?: boolean): void;
   /**
    * Validates a single field using the provided `validationSchema`
    * asynchronously.
@@ -156,22 +159,33 @@ export function newForm<T = Values>(config: FormConfig<T>): FormInstance<T> {
     ...initialValues,
   });
 
+  const setFieldError = (field: string, message: string | null): void => {
+    errors.update((currentState) => ({
+      ...currentState,
+      [field]: message,
+    }));
+  };
+
+  /**
+   * Updates the `errors` store with an instance of Yup's `ValidationError`.
+   */
+  const setYupValidationErrors = (error: ValidationError): void => {
+    if ('path' in error && Array.isArray(error?.errors)) {
+      setFieldError(error.path, error.errors[0]);
+      return;
+    }
+
+    console.error('Missing "path" and "errors" array.');
+  };
+
   const validateField = async (field: string): Promise<void> => {
     try {
       const currentFormValues = get(values);
 
       await config.validationSchema.validateAt(field, currentFormValues);
-      errors.update((currentState) => ({
-        ...currentState,
-        [field]: undefined,
-      }));
+      setFieldError(field, null);
     } catch (error) {
-      if ('path' in error && Array.isArray(error?.errors)) {
-        errors.update((currentState) => ({
-          ...currentState,
-          [error.path]: error.errors[0],
-        }));
-      }
+      setYupValidationErrors(error);
     }
   };
 
@@ -185,12 +199,7 @@ export function newForm<T = Values>(config: FormConfig<T>): FormInstance<T> {
         [field]: undefined,
       }));
     } catch (error) {
-      if ('path' in error && Array.isArray(error?.errors)) {
-        errors.update((currentState) => ({
-          ...currentState,
-          [error.path]: error.errors[0],
-        }));
-      }
+      setYupValidationErrors(error);
     }
   };
 
@@ -230,6 +239,7 @@ export function newForm<T = Values>(config: FormConfig<T>): FormInstance<T> {
     handleChange,
     handleInput,
     initialValues,
+    setFieldError,
     setFieldValue,
     values,
     validateField,
