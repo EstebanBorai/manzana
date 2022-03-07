@@ -4,7 +4,7 @@ import { get, writable } from 'svelte/store';
 
 import type { Writable } from 'svelte/store';
 import type { SchemaLike } from 'yup/lib/types';
-import { ValidationError } from 'yup';
+import type { ValidationError } from 'yup';
 
 export type Values = Record<string, any>;
 
@@ -45,8 +45,11 @@ export type FormInstance<T = Values> = {
   handleInput(event: Event): void;
   /**
    * Imperatively sets the error message for the field with the name provided.
+   *
+   * The `message` param could be skipped to clear the error message for the
+   * field in question.
    */
-  setFieldError(name: string, message: string | null): void;
+  setFieldError(name: string, message?: string): void;
   /**
    * Imperatively sets the value for the field with the name provided.
    */
@@ -154,12 +157,16 @@ export function newForm<T = Values>(config: FormConfig<T>): FormInstance<T> {
   }
 
   const initialValues = JSON.parse(JSON.stringify(config.initialValues));
-  const errors = writable({});
+  const errors = writable(
+    Object.fromEntries(
+      Object.keys(initialValues).map((field) => [field, undefined]),
+    ) as Partial<T>,
+  );
   const values = writable({
     ...initialValues,
   });
 
-  const setFieldError = (field: string, message: string | null): void => {
+  const setFieldError = (field: string, message?: string): void => {
     errors.update((currentState) => ({
       ...currentState,
       [field]: message,
