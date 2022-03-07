@@ -1,4 +1,4 @@
-name: lint
+name: build
 
 on:
   pull_request:
@@ -9,8 +9,8 @@ on:
       - main
 
 jobs:
-  lint:
-    name: Linting and Formatting
+  build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -20,5 +20,5 @@ jobs:
           node-version: 16
       - name: Install dependencies
         run: npm install
-      - name: Run linter
-        run: npm run lint
+      - name: Run build
+        run: npm run build
