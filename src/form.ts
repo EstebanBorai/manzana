@@ -44,6 +44,17 @@ export type FormInstance<T = Values> = {
    */
   handleInput(event: Event): void;
   /**
+   * Event handler for the form's submit event.
+   *
+   * Handles the submit event for the `form` element and prevents the
+   * default behavior (`event.preventDefault`).
+   *
+   * Sets the `isSubmitting` store to `true` which can be used as a sentinel
+   * value for a loading UI. If the `validationSchema` is available in the
+   * `FormConfig`, then the `isValidating` store value will be `true` as well.
+   */
+  handleSubmit(event: Event): void;
+  /**
    * Imperatively sets the error message for the field with the name provided.
    *
    * The `message` param could be skipped to clear the error message for the
@@ -109,6 +120,13 @@ export type FormConfig<T = Values> = {
    * changed values and to initialize the form values.
    */
   initialValues: T;
+  /**
+   * Callback to execute when `handleSubmit` is invoked.
+   *
+   * Form values are provided to this callback as the first argument and
+   * `helpers` to update form state.
+   */
+  onSubmit<T>(values: Values, helpers: any): Promise<void> | void;
   /**
    * Wether to validate form fields whenever `handleChange` is executed.
    */
@@ -241,10 +259,15 @@ export function newForm<T = Values>(config: FormConfig<T>): FormInstance<T> {
     return setFieldValue(name, value, config.validateOnInput);
   };
 
+  const handleSubmit = async (event: Event): Promise<void> => {
+    throw new Error('Not implemented');
+  };
+
   return {
     errors,
     handleChange,
     handleInput,
+    handleSubmit,
     initialValues,
     setFieldError,
     setFieldValue,
