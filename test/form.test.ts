@@ -1,6 +1,6 @@
 import { get } from 'svelte/store';
 import * as Yup from 'yup';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { newForm } from '../src';
 import { getInputValue } from '../src/form';
@@ -16,6 +16,7 @@ describe('Form: initialValues', () => {
     };
     const form = newForm<{ name: string; last: string; email: string }>({
       initialValues,
+      onSubmit: vi.fn(),
     });
     const values = get(form.values);
 
@@ -32,6 +33,7 @@ describe('Form: initialValues', () => {
     };
     const form = newForm<{ name: string; last: string; email: string }>({
       initialValues,
+      onSubmit: vi.fn(),
     });
 
     initialValues.name = 'John';
@@ -56,14 +58,17 @@ describe('Form: initialValues', () => {
 
 describe('Form: $values', () => {
   it('`form.$values` from `newForm` is a store with a subscribe function', () => {
-    const form = newForm({ initialValues: {} });
+    const form = newForm({ initialValues: {}, onSubmit: vi.fn() });
 
     expect(form.values.subscribe).toBeDefined();
   });
 
   it('Holds "initialValues" when subscribing for the first time', () => {
     const initialValues = { name: 'Lorem', last: 'Ipsum' };
-    const form = newForm<typeof initialValues>({ initialValues });
+    const form = newForm<typeof initialValues>({
+      initialValues,
+      onSubmit: vi.fn(),
+    });
     const values = get(form.values);
 
     expect(values.name).toStrictEqual('Lorem');
@@ -72,7 +77,10 @@ describe('Form: $values', () => {
 
   it('Updates $values when "handleChange" is executed', () => {
     const initialValues = { name: 'Lorem', last: 'Ipsum' };
-    const form = newForm<typeof initialValues>({ initialValues });
+    const form = newForm<typeof initialValues>({
+      initialValues,
+      onSubmit: vi.fn(),
+    });
 
     form.handleChange({
       target: {
@@ -88,7 +96,10 @@ describe('Form: $values', () => {
 
   it('Updates $values when "setFieldValue" is executed', () => {
     const initialValues = { name: 'Lorem', last: 'Ipsum' };
-    const form = newForm<typeof initialValues>({ initialValues });
+    const form = newForm<typeof initialValues>({
+      initialValues,
+      onSubmit: vi.fn(),
+    });
 
     form.setFieldValue('name', 'Testing!');
     const values = get(form.values);
@@ -103,6 +114,7 @@ describe('Form: validateField', () => {
       initialValues: {
         name: '',
       },
+      onSubmit: vi.fn(),
       validationSchema: Yup.object({
         name: Yup.string().required('You must provide the name.'),
       }),
@@ -121,6 +133,7 @@ describe('Form: validateField', () => {
       initialValues: {
         name: '',
       },
+      onSubmit: vi.fn(),
       validationSchema: Yup.object({
         name: Yup.string().required('You must provide the name.'),
       }),
@@ -133,7 +146,7 @@ describe('Form: validateField', () => {
     form.setFieldValue('name', 'Testing!');
     await form.validateField('name');
     const errors2 = get(form.errors);
-    expect(errors2.name).toBeUndefined();
+    expect(errors2.name).toBeNull();
   });
 });
 
@@ -178,5 +191,55 @@ describe('Form Internals: getInputValue', () => {
 
       expect(value).toStrictEqual(instances[index].value);
     });
+  });
+});
+
+describe('Form: handleSubmit', () => {
+  it('Executes `onSubmit` when calling `handleSubmit`', () => {
+    const onSubmit = vi.fn();
+    const form = newForm({
+      initialValues: {
+        name: '',
+      },
+      onSubmit,
+    });
+
+    form.handleSubmit({} as Event);
+
+    expect(onSubmit).toHaveBeenCalledOnce();
+  });
+
+  it('Executes `event.preventDefault` when calling `handleSubmit`', () => {
+    const onSubmit = vi.fn();
+    const preventDefault = vi.fn() as any;
+    const form = newForm({
+      initialValues: {
+        name: '',
+      },
+      onSubmit,
+    });
+
+    form.handleSubmit({
+      preventDefault,
+    } as Event);
+
+    expect(preventDefault).toHaveBeenCalledOnce();
+  });
+
+  it('Executes `event.stopPropagation` when calling `handleSubmit`', () => {
+    const onSubmit = vi.fn();
+    const stopPropagation = vi.fn() as any;
+    const form = newForm({
+      initialValues: {
+        name: '',
+      },
+      onSubmit,
+    });
+
+    form.handleSubmit({
+      stopPropagation,
+    } as Event);
+
+    expect(stopPropagation).toHaveBeenCalledOnce();
   });
 });
