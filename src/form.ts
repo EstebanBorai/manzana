@@ -1,12 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { get, writable } from 'svelte/store';
+import { derived, get, writable } from 'svelte/store';
+import { isSchema, ValidationError } from 'yup';
 
-import type { Writable } from 'svelte/store';
+import type { Readable, Writable } from 'svelte/store';
 import type { SchemaLike } from 'yup/lib/types';
-import type { ValidationError } from 'yup';
 
 export type Values = Record<string, any>;
+
+export type FormErrors = Record<string, string | undefined>;
+
+/**
+ * Imperatively sets the error message for the field with the name provided.
+ *
+ * The `message` param could be skipped to clear the error message for the
+ * field in question.
+ */
+export type SetFieldError = (name: string, message?: string) => void;
+
+export type OnSubmitHelpers = {
+  setFieldError: SetFieldError;
+};
 
 export type FormInstance<T = Values> = {
   /**
@@ -14,7 +28,7 @@ export type FormInstance<T = Values> = {
    *
    * A writable store that holds form validation errors.
    */
-  errors: Writable<Partial<T>>;
+  errors: Readable<FormErrors>;
   /**
    * Form's fields initial values.
    *
@@ -22,6 +36,16 @@ export type FormInstance<T = Values> = {
    * changed values and to initialize the form values.
    */
   initialValues: T;
+  /**
+   * A readable store which holds a boolean `true` if the form submition is
+   * being executed.
+   */
+  isSubmitting: Readable<boolean>;
+  /**
+   * A readable store which holds a boolean `true` if the form submition is
+   * under validation stage.
+   */
+  isValidating: Readable<boolean>;
   /**
    * Event handler for the input's `change` event.
    */
@@ -54,13 +78,7 @@ export type FormInstance<T = Values> = {
    * `FormConfig`, then the `isValidating` store value will be `true` as well.
    */
   handleSubmit(event: Event): void;
-  /**
-   * Imperatively sets the error message for the field with the name provided.
-   *
-   * The `message` param could be skipped to clear the error message for the
-   * field in question.
-   */
-  setFieldError(name: string, message?: string): void;
+  setFieldError: SetFieldError;
   /**
    * Imperatively sets the value for the field with the name provided.
    */
@@ -126,7 +144,7 @@ export type FormConfig<T = Values> = {
    * Form values are provided to this callback as the first argument and
    * `helpers` to update form state.
    */
-  onSubmit<T>(values: Values, helpers: any): Promise<void> | void;
+  onSubmit<T>(values: T, helpers: any): Promise<void> | void;
   /**
    * Wether to validate form fields whenever `handleChange` is executed.
    */
@@ -175,17 +193,18 @@ export function newForm<T = Values>(config: FormConfig<T>): FormInstance<T> {
   }
 
   const initialValues = JSON.parse(JSON.stringify(config.initialValues));
-  const errors = writable(
+  const __isSubmitting = writable(false);
+  const __isValidating = writable(false);
+  const __errors = writable(
     Object.fromEntries(
       Object.keys(initialValues).map((field) => [field, undefined]),
-    ) as Partial<T>,
+    ) as FormErrors,
   );
   const values = writable({
     ...initialValues,
   });
-
   const setFieldError = (field: string, message?: string): void => {
-    errors.update((currentState) => ({
+    __errors.update((currentState) => ({
       ...currentState,
       [field]: message,
     }));
@@ -260,15 +279,68 @@ export function newForm<T = Values>(config: FormConfig<T>): FormInstance<T> {
   };
 
   const handleSubmit = async (event: Event): Promise<void> => {
-    throw new Error('Not implemented');
+    if (config?.onSubmit && typeof config.onSubmit === 'function') {
+      if (event?.preventDefault && typeof event.preventDefault === 'function') {
+        event.preventDefault();
+      }
+
+      if (
+        event?.stopPropagation &&
+        typeof event.stopPropagation === 'function'
+      ) {
+        event.stopPropagation();
+      }
+
+      const currentValues = get(values);
+
+      __isSubmitting.set(true);
+
+      if (isSchema(config.validationSchema)) {
+        try {
+          __isValidating.set(true);
+
+          config.validationSchema.validate(currentValues, {
+            abortEarly: false,
+          });
+        } catch (error) {
+          if (error instanceof ValidationError) {
+            if ('inner' in error) {
+              const validationErrors = error.inner.reduce(
+                (acc: FormErrors, { message, path }) => {
+                  return {
+                    ...acc,
+                    [path]: message,
+                  };
+                },
+                {},
+              );
+
+              __errors.set(validationErrors);
+              return;
+            }
+
+            console.error('An unhandled error ocurred validating the form.');
+            console.error(error);
+          }
+        } finally {
+          __isValidating.set(false);
+        }
+      }
+
+      await config.onSubmit(currentValues, {
+        setFieldError,
+      });
+    }
   };
 
   return {
-    errors,
+    errors: derived(__errors, (errors) => errors),
     handleChange,
     handleInput,
     handleSubmit,
     initialValues,
+    isSubmitting: derived(__isSubmitting, (isSubmitting) => isSubmitting),
+    isValidating: derived(__isValidating, (isValidating) => isValidating),
     setFieldError,
     setFieldValue,
     values,
