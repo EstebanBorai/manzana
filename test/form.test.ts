@@ -133,7 +133,7 @@ describe('Form: validateField', () => {
     form.setFieldValue('name', 'Testing!');
     await form.validateField('name');
     const errors2 = get(form.errors);
-    expect(errors2.name).toBeUndefined();
+    expect(errors2.name).toBeNull();
   });
 });
 

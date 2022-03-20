@@ -5,6 +5,8 @@
   </h4>
 </div>
 
+> This package is under heavy development. Contributions are welcome. The stable release will be ready on version: `v1.0.0`.
+
 ## Releasing
 
 Whenever a tag is pushed a new release is created an the package is
