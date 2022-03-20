@@ -211,6 +211,7 @@ describe('Form: handleSubmit', () => {
 
   it('Executes `event.preventDefault` when calling `handleSubmit`', () => {
     const onSubmit = vi.fn();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const preventDefault = vi.fn() as any;
     const form = newForm({
       initialValues: {
@@ -228,6 +229,7 @@ describe('Form: handleSubmit', () => {
 
   it('Executes `event.stopPropagation` when calling `handleSubmit`', () => {
     const onSubmit = vi.fn();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const stopPropagation = vi.fn() as any;
     const form = newForm({
       initialValues: {
