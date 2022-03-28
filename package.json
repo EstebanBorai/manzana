@@ -1,6 +1,6 @@
 {
   "name": "manzana",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Build forms on Svelte as easy as eating apple.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
