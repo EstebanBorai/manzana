@@ -1,5 +1,5 @@
 /* c8 ignore start */
 
-export { newForm, FormInstance, FormConfig } from './form';
+export { newForm } from './form';
 
 /* c8 ignore end */
