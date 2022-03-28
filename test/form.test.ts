@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { newForm } from '../src';
 import { getInputValue } from '../src/form';
 
-import type { FormConfig } from '../src/form';
+import type { FormConfig } from '../src/types';
 
 describe('Form: initialValues', () => {
   it('Creates a new form with initial values', () => {

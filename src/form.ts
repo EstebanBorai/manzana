@@ -179,6 +179,51 @@ export const getInputValue = (inputElement: HTMLInputElement): any => {
   return inputElement.value;
 };
 
+/**
+ * Creates a new form instance with an `errors` and `values` store.
+ *
+ * # Example
+ *
+ * ```html
+ * <script lang="ts">
+ * import { newForm } from 'manzana';
+ *
+ * import { productService } from '$lib/services/product';
+ *
+ * const { handleSubmit, errors, values, setFieldValue } = newForm<{
+ *   name: string;
+ *   logo: File;
+ * }>({
+ *   initialValues: {
+ *     name: '',
+ *     logo: null
+ *   },
+ *   onSubmit: async (values) => {
+ *     await productService.createBrand(values.name, values.logo);
+ *   }
+ * });
+ * </script>
+ *
+ * <form on:submit={handleSubmit}>
+ *   <div>
+ *     <Input
+ *       name="name"
+ *       label="Brand Name"
+ *       placeholder="Apple Inc."
+ *       bind:value={$values.name}
+ *       error={$errors.name}
+ *     />
+ *     <FileDropzone
+ *       error={$errors.logo}
+ *       onChange={(files) => setFieldValue('logo', files[0])}
+ *     />
+ *   </div>
+ *   <div class="text-center pt-4">
+ *     <Button type="submit">Crear</Button>
+ *   </div>
+ * </form>
+ * ```
+ */
 export function newForm<T = Values>(config: FormConfig<T>): FormInstance<T> {
   if (typeof config === 'undefined') {
     throw new TypeError(
@@ -238,7 +283,7 @@ export function newForm<T = Values>(config: FormConfig<T>): FormInstance<T> {
       const currentFormValues = get(values);
 
       config.validationSchema.validateSyncAt(field, currentFormValues);
-      errors.update((currentState) => ({
+      __errors.update((currentState) => ({
         ...currentState,
         [field]: undefined,
       }));
