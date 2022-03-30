@@ -144,7 +144,7 @@ export type FormConfig<T = Values> = {
    * Form values are provided to this callback as the first argument and
    * `helpers` to update form state.
    */
-  onSubmit<T>(values: T, helpers: any): Promise<void> | void;
+  onSubmit(values: T, helpers: any): Promise<void> | void;
   /**
    * Wether to validate form fields whenever `handleChange` is executed.
    */
@@ -224,7 +224,7 @@ export const getInputValue = (inputElement: HTMLInputElement): any => {
  * </form>
  * ```
  */
-export type NewFormFn<T = Values> = (config: FormConfig<T>) => FormInstance<T>;
+export type NewFormFn = <T = Values>(config: FormConfig<T>) => FormInstance<T>;
 
 export const newForm: NewFormFn = <T>(
   config: FormConfig<T>,
