@@ -3,9 +3,9 @@ import * as Yup from 'yup';
 import { describe, expect, it, vi } from 'vitest';
 
 import { newForm } from '../src';
-import { getInputValue } from '../src/form';
+import { getInputValue } from '../src';
 
-import type { FormConfig } from '../src/types';
+import type { FormConfig } from '../src';
 
 describe('Form: initialValues', () => {
   it('Creates a new form with initial values', () => {
