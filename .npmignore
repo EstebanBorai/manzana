@@ -1,6 +1,6 @@
 .eslintignore
 .eslintrc
-.prettierrcs
+.prettierrc
 .gitignore
 
 LICENSE
