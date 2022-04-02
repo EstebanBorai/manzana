@@ -386,10 +386,9 @@ export const newForm: NewFormFn = <T>(
               __errors.set(validationErrors);
               return;
             }
-
-            console.error('An unhandled error ocurred validating the form.');
-            console.error(error);
           }
+
+          throw error;
         } finally {
           __isValidating.set(false);
         }
