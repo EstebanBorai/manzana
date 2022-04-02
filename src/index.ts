@@ -10,18 +10,6 @@ export type Values = Record<string, any>;
 
 export type FormErrors = Record<string, string | undefined>;
 
-/**
- * Imperatively sets the error message for the field with the name provided.
- *
- * The `message` param could be skipped to clear the error message for the
- * field in question.
- */
-export type SetFieldError = (name: string, message?: string) => void;
-
-export type OnSubmitHelpers = {
-  setFieldError: SetFieldError;
-};
-
 export type FormInstance<T = Values> = {
   /**
    * Form errors.
@@ -29,6 +17,7 @@ export type FormInstance<T = Values> = {
    * A writable store that holds form validation errors.
    */
   errors: Readable<FormErrors>;
+
   /**
    * Form's fields initial values.
    *
@@ -36,20 +25,24 @@ export type FormInstance<T = Values> = {
    * changed values and to initialize the form values.
    */
   initialValues: T;
+
   /**
    * A readable store which holds a boolean `true` if the form submition is
    * being executed.
    */
   isSubmitting: Readable<boolean>;
+
   /**
    * A readable store which holds a boolean `true` if the form submition is
    * under validation stage.
    */
   isValidating: Readable<boolean>;
+
   /**
    * Event handler for the input's `change` event.
    */
   handleChange(event: Event): void;
+
   /**
    * Event handler for the input's `input` event.
    *
@@ -67,6 +60,7 @@ export type FormInstance<T = Values> = {
    * [1]: https://stackoverflow.com/a/57393751/9888500
    */
   handleInput(event: Event): void;
+
   /**
    * Event handler for the form's submit event.
    *
@@ -78,21 +72,36 @@ export type FormInstance<T = Values> = {
    * `FormConfig`, then the `isValidating` store value will be `true` as well.
    */
   handleSubmit(event: Event): void;
-  setFieldError: SetFieldError;
+
+  /**
+   * Imperatively sets the error message for the field with the name provided.
+   *
+   * The `message` param could be skipped to clear the error message for the
+   * field in question.
+   */
+  setFieldError(field: keyof T, message?: string): void;
+
   /**
    * Imperatively sets the value for the field with the name provided.
    */
-  setFieldValue(name: string, value: any, shouldValidateField?: boolean): void;
+  setFieldValue(
+    field: keyof T,
+    value: any,
+    shouldValidateField?: boolean,
+  ): void;
+
   /**
    * Validates a single field using the provided `validationSchema`
    * asynchronously.
    */
-  validateField(field: string): Promise<void>;
+  validateField(field: keyof T): Promise<void>;
+
   /**
    * Validates a single field using the provided `validationSchema`
    * synchronously.
    */
-  validateFieldSync(field: string): void;
+  validateFieldSync(field: keyof T): void;
+
   /**
    * Current form values.
    *
@@ -138,6 +147,7 @@ export type FormConfig<T = Values> = {
    * changed values and to initialize the form values.
    */
   initialValues: T;
+
   /**
    * Callback to execute when `handleSubmit` is invoked.
    *
@@ -145,14 +155,17 @@ export type FormConfig<T = Values> = {
    * `helpers` to update form state.
    */
   onSubmit(values: T, helpers: any): Promise<void> | void;
+
   /**
    * Wether to validate form fields whenever `handleChange` is executed.
    */
   validateOnChange?: boolean;
+
   /**
    * Wether to validate form fields whenever `handleInput` is executed.
    */
   validateOnInput?: boolean;
+
   /**
    * A [Yup][1] schema used to validate form values.
    *
@@ -252,7 +265,7 @@ export const newForm: NewFormFn = <T>(
   const values = writable({
     ...initialValues,
   });
-  const setFieldError = (field: string, message?: string): void => {
+  const setFieldError = (field: keyof T, message?: string): void => {
     __errors.update((currentState) => ({
       ...currentState,
       [field]: message,
@@ -264,29 +277,35 @@ export const newForm: NewFormFn = <T>(
    */
   const setYupValidationErrors = (error: ValidationError): void => {
     if ('path' in error && Array.isArray(error?.errors)) {
-      setFieldError(error.path, error.errors[0]);
+      setFieldError(error.path as keyof T, error.errors[0]);
       return;
     }
 
     console.error('Missing "path" and "errors" array.');
   };
 
-  const validateField = async (field: string): Promise<void> => {
+  const validateField = async (field: keyof T): Promise<void> => {
     try {
       const currentFormValues = get(values);
 
-      await config.validationSchema.validateAt(field, currentFormValues);
+      await config.validationSchema.validateAt(
+        field as string,
+        currentFormValues,
+      );
       setFieldError(field, null);
     } catch (error) {
       setYupValidationErrors(error);
     }
   };
 
-  const validateFieldSync = (field: string): void => {
+  const validateFieldSync = (field: keyof T): void => {
     try {
       const currentFormValues = get(values);
 
-      config.validationSchema.validateSyncAt(field, currentFormValues);
+      config.validationSchema.validateSyncAt(
+        field as string,
+        currentFormValues,
+      );
       __errors.update((currentState) => ({
         ...currentState,
         [field]: undefined,
@@ -297,23 +316,23 @@ export const newForm: NewFormFn = <T>(
   };
 
   const setFieldValue = (
-    name: string,
+    field: keyof T,
     value: any,
     shouldValidateField?: boolean,
   ): void => {
     values.update((currentValues) => ({
       ...currentValues,
-      [name]: value,
+      [field]: value,
     }));
 
     if (shouldValidateField && config.validationSchema) {
-      validateFieldSync(name);
+      validateFieldSync(field);
     }
   };
 
   const handleChange = (event: Event): void => {
     const target = event.target as HTMLInputElement;
-    const name = target.name;
+    const name = target.name as keyof T;
     const value = getInputValue(target);
 
     return setFieldValue(name, value, config.validateOnChange);
@@ -324,7 +343,7 @@ export const newForm: NewFormFn = <T>(
     const name = target.name;
     const value = getInputValue(target);
 
-    return setFieldValue(name, value, config.validateOnInput);
+    return setFieldValue(name as keyof T, value, config.validateOnInput);
   };
 
   const handleSubmit = async (event: Event): Promise<void> => {
