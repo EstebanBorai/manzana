@@ -1,0 +1,18 @@
+type = 'javascript'
+name = 'manzana'
+route = 'manzana.estebanborai.com/*'
+compatibility_date = '2022-04-02'
+account_id = ''
+workers_dev = false
+zone_id = ''
+
+[site]
+bucket = './docs/build'
+entry-point = 'workers-site'
+
+[build]
+command = 'npm run build:docs'
+watch_dir = 'app'
+
+[build.upload]
+format = 'service-worker'
