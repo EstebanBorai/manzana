@@ -10,3 +10,4 @@ coverage
 dist
 package
 node_modules
+wrangler.toml
