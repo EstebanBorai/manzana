@@ -1,0 +1,60 @@
+Manazana brings a Form constructor which provides total control on your
+forms. All of the form behavior is handled in the `<script>` side
+of your component, this means that Manzana doesn't bring any components to
+wrap or build your form on _top of_, instead an instance of a Form object is
+created which methods to control and retrieve form data.
+
+## Installation
+
+Manzana is available as a JavaScript package, published on NPM.
+You can install it as usually using your favorite package manager:
+
+### NPM
+
+```bash
+npm install manzana
+```
+
+### Yarn
+
+```bash
+yarn add manzana
+```
+
+### PNPM
+
+```bash
+pnpm add manzana
+```
+
+> You don't have to install a `@types/manzana` package, given that manzana is
+written on TypeScript and already ports it's own type definitions.
+
+## Usage
+
+The following is a basic form built using manzana to handle the submit event and
+store of input values.
+
+```svelte
+<script lang="ts">
+  import { newForm } from 'manzana';
+
+  const { handleSubmit, values } = newForm({
+    initialValues: {
+      message: '',
+    },
+    onSubmit(values) {
+      console.log(values);
+    }
+  });
+</script>
+
+<form on:submit={handleSubmit}>
+  <input
+    type="text"
+    name="message"
+    bind:value={$values.message}
+  />
+  <button type="submit">Send</button>
+</form>
+```
