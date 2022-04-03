@@ -8,11 +8,12 @@
   "scripts": {
     "build": "rollup -c rollup.config.js",
     "coverage": "vitest run --coverage",
-    "docs:publish": "cd ./docs && npm install --frozen-lockfile && wrangler publish",
+    "docs:publish": "cd ./docs && npm install --frozen-lockfile && cd ../ && npm run wrangler:publish",
     "test": "vitest",
     "test:dev": "vitest watch",
     "lint": "prettier --ignore-path .gitignore --check --plugin-search-dir=. . && eslint --ignore-path .gitignore .",
-    "format": "prettier --ignore-path .gitignore --write --plugin-search-dir=. . && eslint --fix ."
+    "format": "prettier --ignore-path .gitignore --write --plugin-search-dir=. . && eslint --fix .",
+    "wrangler:publish": "wrangler publish"
   },
   "repository": {
     "type": "git",
