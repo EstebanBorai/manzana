@@ -23,19 +23,20 @@ jobs:
         with:
           node-version: '16.x'
 
-      - name: Change workdir
-        run: cd ./docs
-
       - name: Create wrangler.toml
+        working-directory: './docs'
         run: ../bin/make-wrangler.sh
 
       - name: Install dependencies
+        working-directory: './docs'
         run: npm install --frozen-lockfile
 
       - name: Build project
+        working-directory: './docs'
         run: npm run build
 
       - name: Publish
+        working-directory: './docs'
         run: npm run wrangler:publish
 
       - name: Deploy Success
