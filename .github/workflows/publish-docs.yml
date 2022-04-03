@@ -24,7 +24,7 @@ jobs:
           node-version: '16.x'
 
       - name: Change workdir
-        run: ./docs
+        run: cd ./docs
 
       - name: Create wrangler.toml
         run: ../bin/make-wrangler.sh
