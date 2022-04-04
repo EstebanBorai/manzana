@@ -21,7 +21,7 @@
   });
 </script>
 
-<section class="grid gap-4 grid-cols-2 my-4">
+<section class="flex flex-col md:grid md:gap-4 md:grid-cols-2 my-4">
   <form on:submit={handleSubmit}>
     <!-- Sender Input -->
     <div class="flex flex-col space-y-2">
