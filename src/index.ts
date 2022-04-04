@@ -8,7 +8,7 @@ import type { SchemaLike } from 'yup/lib/types';
 
 export type Values = Record<string, any>;
 
-export type FormErrors = Record<string, string | undefined>;
+export type FormErrors<T> = Record<keyof T, string | undefined>;
 
 export type FormInstance<T = Values> = {
   /**
@@ -16,7 +16,12 @@ export type FormInstance<T = Values> = {
    *
    * A writable store that holds form validation errors.
    */
-  errors: Readable<FormErrors>;
+  errors: Readable<FormErrors<T>>;
+
+  /**
+   * Clear all errors.
+   */
+  clearErrors(): void;
 
   /**
    * Form's fields initial values.
@@ -255,16 +260,29 @@ export const newForm: NewFormFn = <T>(
   }
 
   const initialValues = JSON.parse(JSON.stringify(config.initialValues));
+
   const __isSubmitting = writable(false);
+
   const __isValidating = writable(false);
+
   const __errors = writable(
     Object.fromEntries(
       Object.keys(initialValues).map((field) => [field, undefined]),
-    ) as FormErrors,
+    ) as FormErrors<T>,
   );
+
   const values = writable({
     ...initialValues,
   });
+
+  const clearErrors = (): void => {
+    __errors.set(
+      Object.fromEntries(
+        Object.keys(initialValues).map((field) => [field, undefined]),
+      ) as FormErrors<T>,
+    );
+  };
+
   const setFieldError = (field: keyof T, message?: string): void => {
     __errors.update((currentState) => ({
       ...currentState,
@@ -347,34 +365,39 @@ export const newForm: NewFormFn = <T>(
   };
 
   const handleSubmit = async (event: Event): Promise<void> => {
-    if (config?.onSubmit && typeof config.onSubmit === 'function') {
-      if (event?.preventDefault && typeof event.preventDefault === 'function') {
-        event.preventDefault();
-      }
+    try {
+      if (config?.onSubmit && typeof config.onSubmit === 'function') {
+        if (
+          event?.preventDefault &&
+          typeof event.preventDefault === 'function'
+        ) {
+          event.preventDefault();
+        }
 
-      if (
-        event?.stopPropagation &&
-        typeof event.stopPropagation === 'function'
-      ) {
-        event.stopPropagation();
-      }
+        if (
+          event?.stopPropagation &&
+          typeof event.stopPropagation === 'function'
+        ) {
+          event.stopPropagation();
+        }
 
-      const currentValues = get(values);
+        const currentValues = get(values);
 
-      __isSubmitting.set(true);
+        clearErrors();
 
-      if (isSchema(config.validationSchema)) {
-        try {
-          __isValidating.set(true);
+        __isSubmitting.set(true);
 
-          config.validationSchema.validate(currentValues, {
-            abortEarly: false,
-          });
-        } catch (error) {
-          if (error instanceof ValidationError) {
-            if ('inner' in error) {
+        if (isSchema(config.validationSchema)) {
+          try {
+            __isValidating.set(true);
+
+            await config.validationSchema.validate(currentValues, {
+              abortEarly: false,
+            });
+          } catch (error) {
+            if (error?.inner) {
               const validationErrors = error.inner.reduce(
-                (acc: FormErrors, { message, path }) => {
+                (acc: FormErrors<T>, { message, path }) => {
                   return {
                     ...acc,
                     [path]: message,
@@ -386,21 +409,24 @@ export const newForm: NewFormFn = <T>(
               __errors.set(validationErrors);
               return;
             }
+
+            throw error;
+          } finally {
+            __isValidating.set(false);
           }
-
-          throw error;
-        } finally {
-          __isValidating.set(false);
         }
-      }
 
-      await config.onSubmit(currentValues, {
-        setFieldError,
-      });
+        await config.onSubmit(currentValues, {
+          setFieldError,
+        });
+      }
+    } finally {
+      __isSubmitting.set(false);
     }
   };
 
   return {
+    clearErrors,
     errors: derived(__errors, (errors) => errors),
     handleChange,
     handleInput,
