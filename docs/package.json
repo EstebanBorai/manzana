@@ -22,7 +22,7 @@
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-svelte3": "^3.2.1",
-    "manzana": "file:../",
+    "manzana": "latest",
     "mdsvex": "^0.10.5",
     "postcss": "^8.4.12",
     "prettier": "^2.5.1",
