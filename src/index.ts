@@ -10,6 +10,12 @@ export type Values = Record<string, any>;
 
 export type FormErrors<T> = Record<keyof T, string | undefined>;
 
+export type SetFieldError<T> = (field: keyof T, message?: string) => void;
+
+export type OnSubmitHelpers<T> = {
+  setFieldError: SetFieldError<T>;
+};
+
 export type FormInstance<T = Values> = {
   /**
    * Form errors.
@@ -84,7 +90,7 @@ export type FormInstance<T = Values> = {
    * The `message` param could be skipped to clear the error message for the
    * field in question.
    */
-  setFieldError(field: keyof T, message?: string): void;
+  setFieldError: SetFieldError<T>;
 
   /**
    * Imperatively sets the value for the field with the name provided.
@@ -159,7 +165,7 @@ export type FormConfig<T = Values> = {
    * Form values are provided to this callback as the first argument and
    * `helpers` to update form state.
    */
-  onSubmit(values: T, helpers: any): Promise<void> | void;
+  onSubmit(values: T, helpers: OnSubmitHelpers<T>): Promise<void> | void;
 
   /**
    * Wether to validate form fields whenever `handleChange` is executed.

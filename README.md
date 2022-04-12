@@ -5,7 +5,26 @@
   </h4>
 </div>
 
-> This package is under heavy development. Contributions are welcome. The stable release will be ready on version: `v1.0.0`.
+## Installation
+
+```bash
+# npm
+npm install manzana
+
+# yarn
+yarn add manzana
+
+# pnpm
+pnpm add manzana
+```
+
+## Usage
+
+### Creating a new form
+
+```svelte
+
+```
 
 ## Releasing
 
