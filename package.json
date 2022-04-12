@@ -27,7 +27,7 @@
   "bugs": {
     "url": "https://github.com/EstebanBorai/manzana/issues"
   },
-  "homepage": "https://github.com/EstebanBorai/manzana#readme",
+  "homepage": "https://manzana.estebanborai.com",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^21.0.2",
     "@rollup/plugin-node-resolve": "^13.1.3",
