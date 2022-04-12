@@ -63,11 +63,21 @@ store of input values.
 </form>
 ```
 
-### Validation
+### Full Featured Form
 
 Manzana provides form validation support through Yup. When creating a new form
 with `newForm` function, you can provide a Yup validation schema which will be
 used to validate the form.
+
+Validation stages are provided using `validateOn[Event]` where
+`[Event]` is any of:
+
+- Blur
+- Change
+- Focus
+- Submit
+
+By default all of these are `false`.
 
 ```svelte
 <script lang="ts">
@@ -76,12 +86,13 @@ used to validate the form.
 
   let valuesSubmitted = null;
 
-  const { errors, handleSubmit, isSubmitting, isValidating, values } = newForm({
+  const { errors, handleBlur, handleFocus, handleSubmit, isSubmitting, isValidating, touched, values } = newForm({
     initialValues: {
       sender: '',
       receiver: '',
       message: ''
     },
+    validateOnBlur: true,
     validationSchema: Yup.object({
       sender: Yup.string().email().required(),
       receiver: Yup.string().email().required(),

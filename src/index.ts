@@ -12,6 +12,8 @@ export type FormErrors<T> = Record<keyof T, string | undefined>;
 
 export type SetFieldError<T> = (field: keyof T, message?: string) => void;
 
+export type SetFieldTouched<T> = (field: keyof T, value: boolean) => void;
+
 export type OnSubmitHelpers<T> = {
   setFieldError: SetFieldError<T>;
 };
@@ -20,7 +22,7 @@ export type FormInstance<T extends object> = {
   /**
    * Form errors.
    *
-   * A writable store that holds form validation errors.
+   * A readable store that holds form validation errors.
    */
   errors: Readable<FormErrors<T>>;
 
@@ -50,9 +52,19 @@ export type FormInstance<T extends object> = {
   isValidating: Readable<boolean>;
 
   /**
+   * Event handler for the input's `blur` event.
+   */
+  handleBlur(event: Event): void;
+
+  /**
    * Event handler for the input's `change` event.
    */
   handleChange(event: Event): void;
+
+  /**
+   * Event handler for the input's `focus` event.
+   */
+  handleFocus(event: Event): void;
 
   /**
    * Event handler for the input's `input` event.
@@ -93,6 +105,11 @@ export type FormInstance<T extends object> = {
   setFieldError: SetFieldError<T>;
 
   /**
+   * Imperatively sets a field to be "touched".
+   */
+  setFieldTouched: SetFieldTouched<T>;
+
+  /**
    * Imperatively sets the value for the field with the name provided.
    */
   setFieldValue(
@@ -100,6 +117,14 @@ export type FormInstance<T extends object> = {
     value: any,
     shouldValidateField?: boolean,
   ): void;
+
+  /**
+   * Form touched (e.g. clicked) fields.
+   *
+   * A readable store that holds form fields which have been interacted by
+   * the user.
+   */
+  touched: Readable<Record<keyof T, boolean>>;
 
   /**
    * Validates a single field using the provided `validationSchema`
@@ -168,9 +193,19 @@ export type FormConfig<T extends object> = {
   onSubmit(values: T, helpers: OnSubmitHelpers<T>): Promise<void> | void;
 
   /**
+   * Wether to validate form fields whenever `handleBlur` is executed.
+   */
+  validateOnBlur?: boolean;
+
+  /**
    * Wether to validate form fields whenever `handleChange` is executed.
    */
   validateOnChange?: boolean;
+
+  /**
+   * Wether to validate form fields whenever `handleFocus` is executed.
+   */
+  validateOnFocus?: boolean;
 
   /**
    * Wether to validate form fields whenever `handleInput` is executed.
@@ -274,7 +309,9 @@ export const newForm: NewFormFn = <T extends object>(
   const __isValidating = writable(false);
 
   const __errors = writable(clone(initialValues, null) as FormErrors<T>);
-
+  const __touched = writable(
+    clone(initialValues, false) as Record<keyof T, boolean>,
+  );
   const values = writable({
     ...initialValues,
   });
@@ -287,6 +324,19 @@ export const newForm: NewFormFn = <T extends object>(
     __errors.update((currentState) => ({
       ...currentState,
       [field]: message,
+    }));
+  };
+
+  const setFieldTouched = (field: keyof T, value = true): void => {
+    if (typeof value !== 'boolean') {
+      throw new TypeError(
+        `Expected a "boolean" value for "setFieldTouched". Received "${typeof value}" instead.`,
+      );
+    }
+
+    __touched.update((currentValue) => ({
+      ...currentValue,
+      [field]: value,
     }));
   };
 
@@ -348,12 +398,34 @@ export const newForm: NewFormFn = <T extends object>(
     }
   };
 
+  const handleBlur = (event: Event): void => {
+    const target = event.target as HTMLInputElement;
+    const name = target.name as keyof T;
+
+    setFieldTouched(name);
+
+    if (config.validateOnBlur) {
+      validateField(name);
+    }
+  };
+
   const handleChange = (event: Event): void => {
     const target = event.target as HTMLInputElement;
     const name = target.name as keyof T;
     const value = getInputValue(target);
 
     return setFieldValue(name, value, config.validateOnChange);
+  };
+
+  const handleFocus = (event: Event): void => {
+    const target = event.target as HTMLInputElement;
+    const name = target.name as keyof T;
+
+    setFieldTouched(name);
+
+    if (config.validateOnFocus) {
+      validateField(name);
+    }
   };
 
   const handleInput = (event: Event): void => {
@@ -428,14 +500,18 @@ export const newForm: NewFormFn = <T extends object>(
   return {
     clearErrors,
     errors: derived(__errors, (errors) => errors),
+    handleBlur,
     handleChange,
+    handleFocus,
     handleInput,
     handleSubmit,
     initialValues,
     isSubmitting: derived(__isSubmitting, (isSubmitting) => isSubmitting),
     isValidating: derived(__isValidating, (isValidating) => isValidating),
     setFieldError,
+    setFieldTouched,
     setFieldValue,
+    touched: derived(__touched, (touched) => touched),
     values,
     validateField,
     validateFieldSync,

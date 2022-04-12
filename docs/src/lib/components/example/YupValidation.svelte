@@ -4,12 +4,22 @@
 
   let valuesSubmitted = null;
 
-  const { errors, handleSubmit, isSubmitting, isValidating, values } = newForm({
+  const {
+    errors,
+    handleBlur,
+    handleFocus,
+    handleSubmit,
+    isSubmitting,
+    isValidating,
+    touched,
+    values
+  } = newForm({
     initialValues: {
       sender: '',
       receiver: '',
       message: ''
     },
+    validateOnBlur: true,
     validationSchema: Yup.object({
       sender: Yup.string().email().required(),
       receiver: Yup.string().email().required(),
@@ -35,6 +45,8 @@
         placeholder="john@applebees.com"
         class="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-200"
         bind:value={$values.sender}
+        on:blur={handleBlur}
+        on:focus={handleFocus}
       />
       <p class="text-red-400" class:opacity-0={!$errors.sender}>
         {$errors.sender}
@@ -52,6 +64,8 @@
         placeholder="john@applebees.com"
         class="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-200"
         bind:value={$values.receiver}
+        on:blur={handleBlur}
+        on:focus={handleFocus}
       />
       <p class="text-red-400" class:opacity-0={!$errors.receiver}>
         {$errors.receiver}
@@ -61,9 +75,12 @@
     <div class="flex flex-col space-y-2">
       <label for="message">Message</label>
       <textarea
+        name="message"
         class="resize-none px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-200"
         placeholder="Howdy John!..."
         bind:value={$values.message}
+        on:blur={handleBlur}
+        on:focus={handleFocus}
       />
       <p class="text-red-400" class:opacity-0={!$errors.message}>
         {$errors.message}
@@ -86,6 +103,12 @@
       <strong>Errors</strong>
       <pre><code class="bg-transparent overflow-auto"
           >{JSON.stringify($errors, undefined, 2)}</code
+        ></pre>
+    </article>
+    <article class="flex flex-col justify-start">
+      <strong>Touched Fields</strong>
+      <pre><code class="bg-transparent overflow-auto"
+          >{JSON.stringify($touched, undefined, 2)}</code
         ></pre>
     </article>
     <article class="flex flex-col justify-start">
