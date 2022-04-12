@@ -46,11 +46,13 @@ describe('Form: initialValues', () => {
   });
 
   it('Throws a "TypeError" if no "initialValues" are provided to the configuration.', () => {
-    expect(() => newForm({} as FormConfig)).toThrowErrorMatchingSnapshot();
+    expect(() =>
+      newForm({} as FormConfig<Record<string, unknown>>),
+    ).toThrowErrorMatchingSnapshot();
   });
 
   it('Throws a "TypeError" if no configuration is provided.', () => {
-    const config = undefined as FormConfig;
+    const config = undefined as FormConfig<Record<string, unknown>>;
 
     expect(() => newForm(config)).toThrowErrorMatchingSnapshot();
   });

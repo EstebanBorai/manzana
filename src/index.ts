@@ -3,10 +3,10 @@
 import { derived, get, writable } from 'svelte/store';
 import { isSchema, ValidationError } from 'yup';
 
+import { clone } from './utils';
+
 import type { Readable, Writable } from 'svelte/store';
 import type { SchemaLike } from 'yup/lib/types';
-
-export type Values = Record<string, any>;
 
 export type FormErrors<T> = Record<keyof T, string | undefined>;
 
@@ -16,7 +16,7 @@ export type OnSubmitHelpers<T> = {
   setFieldError: SetFieldError<T>;
 };
 
-export type FormInstance<T = Values> = {
+export type FormInstance<T extends object> = {
   /**
    * Form errors.
    *
@@ -150,7 +150,7 @@ export type FormInstance<T = Values> = {
   values: Writable<T>;
 };
 
-export type FormConfig<T = Values> = {
+export type FormConfig<T extends object> = {
   /**
    * Form's fields initial values.
    *
@@ -248,9 +248,11 @@ export const getInputValue = (inputElement: HTMLInputElement): any => {
  * </form>
  * ```
  */
-export type NewFormFn = <T = Values>(config: FormConfig<T>) => FormInstance<T>;
+export type NewFormFn = <T extends object>(
+  config: FormConfig<T>,
+) => FormInstance<T>;
 
-export const newForm: NewFormFn = <T>(
+export const newForm: NewFormFn = <T extends object>(
   config: FormConfig<T>,
 ): FormInstance<T> => {
   if (typeof config === 'undefined') {
@@ -265,28 +267,20 @@ export const newForm: NewFormFn = <T>(
     );
   }
 
-  const initialValues = JSON.parse(JSON.stringify(config.initialValues));
+  const initialValues = clone(config.initialValues) as T;
 
   const __isSubmitting = writable(false);
 
   const __isValidating = writable(false);
 
-  const __errors = writable(
-    Object.fromEntries(
-      Object.keys(initialValues).map((field) => [field, undefined]),
-    ) as FormErrors<T>,
-  );
+  const __errors = writable(clone(initialValues, null) as FormErrors<T>);
 
   const values = writable({
     ...initialValues,
   });
 
   const clearErrors = (): void => {
-    __errors.set(
-      Object.fromEntries(
-        Object.keys(initialValues).map((field) => [field, undefined]),
-      ) as FormErrors<T>,
-    );
+    __errors.set(clone(initialValues, null) as FormErrors<T>);
   };
 
   const setFieldError = (field: keyof T, message?: string): void => {
