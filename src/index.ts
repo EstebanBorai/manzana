@@ -94,7 +94,7 @@ export type FormInstance<T extends object> = {
    * value for a loading UI. If the `validationSchema` is available in the
    * `FormConfig`, then the `isValidating` store value will be `true` as well.
    */
-  handleSubmit(event: Event): void;
+  handleSubmit(event: Event): Promise<void>;
 
   /**
    * Imperatively sets the error message for the field with the name provided.
