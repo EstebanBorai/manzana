@@ -313,18 +313,20 @@ export const newForm: NewFormFn = <T extends object>(
   }
 
   const __initialValues = writable(clone(config.initialValues) as T);
-
   const __isSubmitting = writable(false);
-
   const __isValidating = writable(false);
-
   const __errors = writable(clone(get(__initialValues), null) as FormErrors<T>);
+  const __dirty = writable(
+    clone(get(__initialValues), false) as Record<keyof T, boolean>,
+  );
   const __touched = writable(
     clone(get(__initialValues), false) as Record<keyof T, boolean>,
   );
   const values = writable({
     ...get(__initialValues),
   });
+
+  values.subscribe((currentValues) => {});
 
   const clearErrors = (): void => {
     __errors.set(clone(get(__initialValues), null) as FormErrors<T>);

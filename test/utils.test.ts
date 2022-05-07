@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { clone } from '../src/utils';
+import { clone, diff } from '../src/utils';
 
 describe('Utils: clone', () => {
   it('clones an object w/o overriding values', () => {
@@ -149,5 +149,136 @@ describe('Utils: clone', () => {
       name: 'Meatball',
       age: 2,
     });
+  });
+});
+
+describe('Utils: diff', () => {
+  it('retrieves keys of fields with different values', () => {
+    const notMatchingKeys = diff(
+      {
+        id: 1,
+        name: 'Jack',
+        isDog: true,
+        isCat: false,
+        age: 3,
+        kind: 'German Shepherd',
+      },
+      {
+        id: 2,
+        name: 'Milk',
+        isDog: false,
+        isCat: true,
+        age: 6,
+        kind: 'Common',
+      },
+    );
+
+    expect(notMatchingKeys).toStrictEqual([
+      'id',
+      'name',
+      'isDog',
+      'isCat',
+      'age',
+      'kind',
+    ]);
+  });
+
+  it('ignores extra keys from second object (`other`)', () => {
+    const notMatchingKeys = diff(
+      {
+        id: 1,
+        name: 'Jack',
+        age: 3,
+        kind: 'German Shepherd',
+      },
+      {
+        id: 2,
+        name: 'Mika',
+        isDog: true,
+        isCat: false,
+        age: 6,
+        kind: 'Labrador',
+      },
+    );
+
+    expect(notMatchingKeys).toStrictEqual(['id', 'name', 'age', 'kind']);
+  });
+
+  it('checks for different arrays', () => {
+    const notMatchingKeys = diff(
+      {
+        favoriteFoods: ['Pizza', 'Spaghetti', 'Pasticcio'],
+      },
+      {
+        favoriteFoods: [
+          'Tarte Tatin',
+          'Boeuf Bourguignon',
+          'Blanquette de Veau',
+        ],
+      },
+    );
+
+    expect(notMatchingKeys).toStrictEqual(['favoriteFoods']);
+  });
+
+  it('checks for different arrays along other fields', () => {
+    const notMatchingKeys = diff(
+      {
+        name: 'Toto Cotugno',
+        favoriteFoods: ['Pizza', 'Spaghetti', 'Pasticcio'],
+      },
+      {
+        name: 'Stromae',
+        favoriteFoods: [
+          'Tarte Tatin',
+          'Boeuf Bourguignon',
+          'Blanquette de Veau',
+        ],
+      },
+    );
+
+    expect(notMatchingKeys).toStrictEqual(['name', 'favoriteFoods']);
+  });
+
+  it('checks for different arrays along other fields', () => {
+    const notMatchingKeys = diff(
+      {
+        name: 'Toto Cotugno',
+        favoriteFoods: ['Pizza', 'Spaghetti', 'Pasticcio'],
+      },
+      {
+        name: 'Stromae',
+        favoriteFoods: [
+          'Tarte Tatin',
+          'Boeuf Bourguignon',
+          'Blanquette de Veau',
+        ],
+      },
+    );
+
+    expect(notMatchingKeys).toStrictEqual(['name', 'favoriteFoods']);
+  });
+
+  it('checks for nested objects', () => {
+    const notMatchingKeys = diff(
+      {
+        usedLanguages: {
+          javascript: true,
+          typescript: true,
+          svelte: true,
+          rust: true,
+        },
+      },
+      {
+        usedLanguages: {
+          javascript: true,
+          typescript: true,
+          svelte: true,
+          rust: true,
+        },
+      },
+    );
+
+    expect(notMatchingKeys).toStrictEqual([]);
   });
 });

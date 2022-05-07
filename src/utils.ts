@@ -33,3 +33,62 @@ export function clone<T extends object, U>(
     }),
   ) as T;
 }
+
+export function diff(base: object, other: object) {
+  return Object.keys(base).reduce((res, key) => {
+    if (!other.hasOwnProperty(key)) {
+      // Object `other` is missing a field from `base` object
+      res.push(key);
+      return res;
+    }
+
+    const baseValue = base[key];
+    const otherValue = other[key];
+
+    if (Array.isArray(baseValue) && Array.isArray(otherValue)) {
+      if (baseValue === otherValue) {
+        // Same reference and thus same array
+        return res;
+      }
+
+      if (baseValue.length !== otherValue.length) {
+        res.push(key);
+        return res;
+      }
+
+      const includesTheSameElements = baseValue.every((el) =>
+        otherValue.includes(el),
+      );
+
+      if (!includesTheSameElements) {
+        res.push(key);
+        return res;
+      }
+    }
+
+    if (
+      typeof baseValue === 'object' &&
+      !Array.isArray(baseValue) &&
+      typeof otherValue === 'object' &&
+      !Array.isArray(otherValue) &&
+      baseValue !== null &&
+      otherValue !== null
+    ) {
+      const differences = diff(baseValue, otherValue);
+
+      console.log(differences);
+
+      if (differences.length) {
+        res.push(key);
+        return res;
+      }
+    }
+
+    if (baseValue !== otherValue) {
+      res.push(key);
+      return res;
+    }
+
+    return res;
+  }, []);
+}
