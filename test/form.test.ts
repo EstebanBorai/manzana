@@ -40,9 +40,9 @@ describe('Form: initialValues', () => {
     initialValues.last = 'Appleseed';
     initialValues.email = 'john@mail.com';
 
-    expect(form.initialValues.name).toStrictEqual('Esteban');
-    expect(form.initialValues.last).toStrictEqual('Borai');
-    expect(form.initialValues.email).toStrictEqual('esteban@mail.com');
+    expect(get(form.initialValues).name).toStrictEqual('Esteban');
+    expect(get(form.initialValues).last).toStrictEqual('Borai');
+    expect(get(form.initialValues).email).toStrictEqual('esteban@mail.com');
   });
 
   it('Throws a "TypeError" if no "initialValues" are provided to the configuration.', () => {
@@ -245,5 +245,28 @@ describe('Form: handleSubmit', () => {
     } as Event);
 
     expect(stopPropagation).toHaveBeenCalledOnce();
+  });
+});
+
+describe('Form: setInitialValues', () => {
+  it('Sets form initial values', () => {
+    const form = newForm({
+      initialValues: {
+        name: 'James',
+        lastName: 'Gordon',
+      },
+      onSubmit: vi.fn(),
+    });
+
+    expect(get(form.initialValues).name).toStrictEqual('James');
+    expect(get(form.initialValues).lastName).toStrictEqual('Gordon');
+
+    form.setInitialValues({
+      name: 'Steve',
+      lastName: 'Angelo',
+    });
+
+    expect(get(form.initialValues).name).toStrictEqual('Steve');
+    expect(get(form.initialValues).lastName).toStrictEqual('Angelo');
   });
 });

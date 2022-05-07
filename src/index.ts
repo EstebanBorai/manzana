@@ -14,6 +14,8 @@ export type SetFieldError<T> = (field: keyof T, message?: string) => void;
 
 export type SetFieldTouched<T> = (field: keyof T, value: boolean) => void;
 
+export type SetInitialValues<T> = (initialValues: T) => void;
+
 export type OnSubmitHelpers<T> = {
   setFieldError: SetFieldError<T>;
 };
@@ -37,7 +39,7 @@ export type FormInstance<T extends object> = {
    * This object is required to initialize a new form, it's used to track
    * changed values and to initialize the form values.
    */
-  initialValues: T;
+  initialValues: Readable<T>;
 
   /**
    * A readable store which holds a boolean `true` if the form submition is
@@ -95,6 +97,14 @@ export type FormInstance<T extends object> = {
    * `FormConfig`, then the `isValidating` store value will be `true` as well.
    */
   handleSubmit(event: Event): Promise<void>;
+
+  /**
+   * Imperatively sets the initial values for the current form.
+   *
+   * This is useful when trying to update values of a form after changing them
+   * to detect `isModified` with different values.
+   */
+  setInitialValues: SetInitialValues<T>;
 
   /**
    * Imperatively sets the error message for the field with the name provided.
@@ -302,22 +312,22 @@ export const newForm: NewFormFn = <T extends object>(
     );
   }
 
-  const initialValues = clone(config.initialValues) as T;
+  const __initialValues = writable(clone(config.initialValues) as T);
 
   const __isSubmitting = writable(false);
 
   const __isValidating = writable(false);
 
-  const __errors = writable(clone(initialValues, null) as FormErrors<T>);
+  const __errors = writable(clone(get(__initialValues), null) as FormErrors<T>);
   const __touched = writable(
-    clone(initialValues, false) as Record<keyof T, boolean>,
+    clone(get(__initialValues), false) as Record<keyof T, boolean>,
   );
   const values = writable({
-    ...initialValues,
+    ...get(__initialValues),
   });
 
   const clearErrors = (): void => {
-    __errors.set(clone(initialValues, null) as FormErrors<T>);
+    __errors.set(clone(get(__initialValues), null) as FormErrors<T>);
   };
 
   const setFieldError = (field: keyof T, message?: string): void => {
@@ -338,6 +348,10 @@ export const newForm: NewFormFn = <T extends object>(
       ...currentValue,
       [field]: value,
     }));
+  };
+
+  const setInitialValues = (initialValues: T) => {
+    __initialValues.set(clone(initialValues) as T);
   };
 
   /**
@@ -505,12 +519,13 @@ export const newForm: NewFormFn = <T extends object>(
     handleFocus,
     handleInput,
     handleSubmit,
-    initialValues,
+    initialValues: derived(__initialValues, (initialValues) => initialValues),
     isSubmitting: derived(__isSubmitting, (isSubmitting) => isSubmitting),
     isValidating: derived(__isValidating, (isValidating) => isValidating),
     setFieldError,
     setFieldTouched,
     setFieldValue,
+    setInitialValues,
     touched: derived(__touched, (touched) => touched),
     values,
     validateField,
