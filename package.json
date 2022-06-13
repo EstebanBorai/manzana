@@ -43,7 +43,6 @@
     "rollup": "^2.69.0",
     "rollup-plugin-svelte": "^7.1.0",
     "rollup-plugin-typescript2": "^0.31.2",
-    "svelte": "^3.46.4",
     "svelte-preprocess": "^4.10.4",
     "tslib": "^2.3.1",
     "typescript": "^4.6.2",
@@ -51,6 +50,7 @@
     "yup": "^0.32.11"
   },
   "peerDependencies": {
+    "svelte": "^3.46.4",
     "yup": "0.x"
   }
 }
