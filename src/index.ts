@@ -14,10 +14,13 @@ export type SetFieldError<T> = (field: keyof T, message?: string) => void;
 
 export type SetFieldTouched<T> = (field: keyof T, value: boolean) => void;
 
+export type SetFieldValue<T> = (field: keyof T, value: unknown) => void;
+
 export type SetInitialValues<T> = (initialValues: T) => void;
 
 export type OnSubmitHelpers<T> = {
   setFieldError: SetFieldError<T>;
+  setFieldValue: SetFieldValue<T>;
 };
 
 export type FormInstance<T extends object> = {
@@ -504,6 +507,7 @@ export const newForm: NewFormFn = <T extends object>(
 
         await config.onSubmit(currentValues, {
           setFieldError,
+          setFieldValue,
         });
       }
     } finally {
