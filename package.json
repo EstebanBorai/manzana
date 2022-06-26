@@ -9,6 +9,7 @@
     "build": "rollup -c rollup.config.js",
     "check": "tsc --noEmit",
     "coverage": "vitest run --coverage",
+    "dev": "rollup -c rollup.config.js --watch",
     "test": "vitest",
     "test:dev": "vitest watch",
     "lint": "prettier --ignore-path .gitignore --check --plugin-search-dir=. . && eslint --ignore-path .gitignore .",
