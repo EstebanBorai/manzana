@@ -8,6 +8,8 @@ import { clone } from './utils';
 import type { Readable, Writable } from 'svelte/store';
 import type { SchemaLike } from 'yup/lib/types';
 
+export { field } from './action';
+
 export type FormErrors<T> = Record<keyof T, string | undefined>;
 
 export type SetFieldError<T> = (field: keyof T, message?: string) => void;
@@ -100,6 +102,11 @@ export type FormInstance<T extends object> = {
    * `FormConfig`, then the `isValidating` store value will be `true` as well.
    */
   handleSubmit(event: Event): Promise<void>;
+
+  /**
+   * Resets form values back to the initial values
+   */
+  reset(): void;
 
   /**
    * Imperatively sets the initial values for the current form.
@@ -415,6 +422,10 @@ export const newForm: NewFormFn = <T extends object>(
     }
   };
 
+  const reset = (): void => {
+    values.set(get(__initialValues));
+  };
+
   const handleBlur = (event: Event): void => {
     const target = event.target as HTMLInputElement;
     const name = target.name as keyof T;
@@ -526,6 +537,7 @@ export const newForm: NewFormFn = <T extends object>(
     initialValues: derived(__initialValues, (initialValues) => initialValues),
     isSubmitting: derived(__isSubmitting, (isSubmitting) => isSubmitting),
     isValidating: derived(__isValidating, (isValidating) => isValidating),
+    reset,
     setFieldError,
     setFieldTouched,
     setFieldValue,
